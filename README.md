@@ -16,11 +16,11 @@ The code uses centered finite differences, explicit Euler time integration, CFL-
 
 ### Reversed Sod shock tube
 
-![Sod shock tube](figures/sod_shock_tube_numerical_vs_exact.png)
+![Sod shock tube](sod_shock_tube_numerical_vs_exact.png)
 
 ### Gaussian advection test
 
-![Gaussian advection](figures/gaussian_advection_test.png)
+![Gaussian advection](gaussian_advection_test.png)
 
 ## Limitations
 
