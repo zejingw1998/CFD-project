@@ -4,19 +4,13 @@ This repository contains a first implementation of a one-dimensional hydrodynami
 
 The code is written in Python using PyTorch, NumPy, and Matplotlib.
 
-## What this project does
+## Overview
 
-The project solves a 1D hydrodynamical system with density, velocity, pressure, and internal energy. The main test case is a reversed Sod shock tube problem. An additional smooth Gaussian advection test is also included.
+The project solves a 1D hydrodynamical system with density, velocity, pressure, and internal energy. The main test case is a reversed Sod shock tube problem. A smooth Gaussian advection test is also included.
 
 ## Numerical method
 
-The code uses:
-
-- centered finite differences for spatial derivatives
-- explicit Euler time integration
-- CFL-based time stepping
-- fixed boundary conditions
-- comparison with an exact Riemann solution
+The code uses centered finite differences, explicit Euler time integration, CFL-based time stepping, and fixed boundary conditions. The numerical shock tube result is compared with an exact Riemann solution.
 
 ## Output figures
 
@@ -30,9 +24,9 @@ The code uses:
 
 ## Limitations
 
-This is a first implementation and uses a centered finite-difference method. Therefore, it can show the main qualitative wave structure, but it is not a fully conservative shock-capturing finite-volume method.
+This is a first implementation. It uses a centered finite-difference method and an internal-energy formulation, so it is not a fully conservative shock-capturing finite-volume method. Oscillations may occur near shocks and contact discontinuities.
 
-For more accurate shock simulations, a Rusanov, HLL, or HLLC finite-volume solver would be more appropriate.
+A more robust version would use conservative variables and a Rusanov, HLL, or HLLC finite-volume flux.
 
 ## How to run
 
