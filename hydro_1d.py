@@ -30,12 +30,10 @@ def save_figure(fig, filename):
 # Parameters and left/right states
 gamma = 5.0 / 3.0
 x_0 = 1.0
-
 rho_L = 0.125
 u_L   = 0.0
 p_L   = 0.125 / gamma
 e_L   = p_L / (gamma - 1.0)
-
 rho_R = 1.0
 u_R   = 0.0
 p_R   = 1.0 / gamma
@@ -82,8 +80,6 @@ print(f"x=2.0: rho = {rho_test.item()}, u = {u_test.item()}, e = {e_test.item()}
 
 
 # Spatial grid
-
-
 x_min = -5.0
 x_max = 5.0
 N = 1000
@@ -93,7 +89,7 @@ x = torch.linspace(x_min, x_max, N, device=device, dtype=dtype) #The mesh grid e
 #The derivatives
 
 
-def ddx(f,dx): #
+def ddx(f,dx): 
     dfdx = torch.zeros_like(f)
     dfdx[1:-1]=(f[2:]-f[:-2])/(2*dx)
 
@@ -421,25 +417,66 @@ axes[2].grid()
 save_figure(fig, "sod_shock_tube_numerical_vs_exact.png")
 plt.show()
 
-# Error analysis
+# Error analysis for Sod shock tube
 
-
-L1_rho = (torch.sum(torch.abs(rho - rho_ex)) * dx).item()
+L1_rho   = (torch.sum(torch.abs(rho - rho_ex)) * dx).item()
 Linf_rho = torch.max(torch.abs(rho - rho_ex)).item()
-L1_u   = (torch.sum(torch.abs(u - u_ex)) * dx).item()
+
+L1_u     = (torch.sum(torch.abs(u - u_ex)) * dx).item()
 Linf_u   = torch.max(torch.abs(u - u_ex)).item()
-L1_p   = (torch.sum(torch.abs(p_num - p_ex)) * dx).item()
+
+L1_p     = (torch.sum(torch.abs(p_num - p_ex)) * dx).item()
 Linf_p   = torch.max(torch.abs(p_num - p_ex)).item()
-print("L1 error in density   =", L1_rho)
-print("Linf error in density =", Linf_rho)
-print("L1 error in velocity   =", L1_u)
-print("Linf error in velocity =", Linf_u)
-print("L1 error in pressure   =", L1_p)
-print("Linf error in pressure =", Linf_p)
+
+print("Sod L1 error in density   =", L1_rho)
+print("Sod Linf error in density =", Linf_rho)
+
+print("Sod L1 error in velocity   =", L1_u)
+print("Sod Linf error in velocity =", Linf_u)
+
+print("Sod L1 error in pressure   =", L1_p)
+print("Sod Linf error in pressure =", Linf_p)
 #Discuss the code’s ability to capture shocks, contact discontinuities, and rarefaction wave
 
 
-# Check Rankine-Hugoniot conditions. And
+# Check Rankine-Hugoniot conditions. 
+
+# Optional Rankine-Hugoniot check for the shock
+# For a conservative discontinuity moving with speed s:
+# s [U] = [F(U)]
+#
+# Here we check only mass and momentum.
+# The internal-energy equation is not in pure conservative form,
+# because it contains the non-conservative term -p * u_x.
+
+def flux_mass_momentum(rho, u, p):
+    m = rho * u
+    F_rho = m
+    F_m   = m * u + p
+    return F_rho, F_m
+
+# left state and left star state around the shock
+rho_star_L = rho_L * ((p_star / p_L + (gamma - 1.0)/(gamma + 1.0)) /
+                      (((gamma - 1.0)/(gamma + 1.0)) * (p_star / p_L) + 1.0))
+
+U_left_mass_mom = (rho_L, rho_L * u_L)
+U_star_mass_mom = (rho_star_L, rho_star_L * u_star)
+
+F_left_mass_mom = flux_mass_momentum(rho_L, u_L, p_L)
+F_star_mass_mom = flux_mass_momentum(rho_star_L, u_star, p_star)
+
+print("Rankine-Hugoniot residuals for the shock:")
+for name, UL, US, FL, FS in zip(
+    ["mass", "momentum"],
+    U_left_mass_mom,
+    U_star_mass_mom,
+    F_left_mass_mom,
+    F_star_mass_mom
+):
+    residual = S_L * (US - UL) - (FS - FL)
+    print(name, "residual =", residual)
+
+print("The internal-energy equation is not checked here because it is written in non-conservative form.")
 
 # Additional smooth Gaussian advection test
 #The u is u_0
@@ -593,11 +630,29 @@ print("Linf error in pressure =", Linf_p)
 
 
 
-#This implementation uses a centered finite-difference approximation and explicit Euler time integration. 
-#The energy equation is written in internal-energy form. Therefore, the code can reproduce the main qualitative wave structure of the reversed Sod shock tube,
-# But it is not a fully conservative shock-capturing finite-volume method. 
-#Some numerical diffusion or oscillations near shocks and contact discontinuities may occur.
-
-
+# Discussion:
+#
+# This implementation uses a centered finite-difference approximation in space
+# and explicit Euler time integration in time. The pressure is computed from
+# the equation of state p = (gamma - 1)e.
+#
+# For the reversed Sod shock tube, the numerical solution captures the main
+# qualitative wave structure: a left-moving shock, a contact discontinuity,
+# and a right rarefaction wave. The computed wave positions are compared with
+# the exact Riemann solution.
+#
+# The rarefaction wave is relatively smooth and is therefore captured better
+# than the shock and the contact discontinuity. Near discontinuities, the
+# centered finite-difference method may produce numerical oscillations or
+# excessive diffusion.
+#
+# The method is not a fully conservative finite-volume shock-capturing method.
+# Therefore, the result should mainly be interpreted as a qualitative validation.
+# A more robust implementation would use a conservative finite-volume method
+# together with a Riemann solver or a flux limiter.
+#
+# The fixed boundary conditions are reasonable here because the computational
+# domain is large and the final simulation time is short. The waves do not
+# reach the boundaries before the final time.
 # Reference:
 # https://www.math.utah.edu/~gustafso/s2014/3150/slides/reaction-advection-dispersion-equation-chapter2.pdf
