@@ -655,4 +655,3 @@ print("Linf error in pressure =", Linf_p)
 # domain is large and the final simulation time is short. The waves do not
 # reach the boundaries before the final time.
 # Reference:
-# https://www.math.utah.edu/~gustafso/s2014/3150/slides/reaction-advection-dispersion-equation-chapter2.pdf
